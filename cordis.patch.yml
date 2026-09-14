@@ -1,0 +1,9 @@
+# Bundle layer for dsh-prompt-enhance.
+#
+# Applied when this package is listed in a profile's `dsh.profile.bundles`
+# (`~/.dsh/profiles/web/package.json`). `name` is a module specifier resolved
+# against that profile, which is why the install step links this directory into
+# the profile's node_modules.
+- insert:
+    - id: dsh-prompt-enhance
+      name: dsh-prompt-enhance

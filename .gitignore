@@ -1,0 +1,7 @@
+/* Dependencies installed by the dsh profile, never committed. */
+node_modules/
+
+/* Local noise */
+*.log
+.DS_Store
+Thumbs.db
