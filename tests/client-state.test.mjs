@@ -15,7 +15,7 @@ import { describe, it } from 'node:test'
 import {
   PHASES, baselineMatches, canStart, failureDiagnostic, failureKey, initialState, isBusy,
   oversizeFailure, reduce, revertTarget, viewModel,
-} from '../src/client/state.js'
+} from '../src/core/rewrite-state.js'
 import { en, zh } from '../src/client/locales.js'
 import { ERROR_CODES, SILENT_CODES } from '../src/shared/codes.js'
 import { MAX_DRAFT_LENGTH } from '../src/shared/protocol.js'

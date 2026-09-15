@@ -191,7 +191,7 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /* ---- src/client/state.js ---- */
+    /* ---- src/core/rewrite-state.js ---- */
     /**
      * The composer seat's state machine, as pure functions.
      *
@@ -210,7 +210,7 @@ window.__ModuleLoader__.load({
      *      and a cancelled one both end in `idle` with no error, because in both
      *      cases the user's text is the one that must win.
      *
-     * @module dsh-prompt-enhance/client/state
+     * @module dsh-prompt-enhance/core/rewrite-state
      */
 
 

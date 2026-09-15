@@ -30,7 +30,7 @@ import { ERROR_CODES } from '../shared/codes.js'
 import { CLASS } from './styles.js'
 import {
   PHASES, baselineMatches, canStart, initialState, oversizeFailure, reduce, viewModel,
-} from './state.js'
+} from '../core/rewrite-state.js'
 import { buildLine, describeThrown, interpret } from './transport.js'
 
 /** Stable selector: the live draft text. */

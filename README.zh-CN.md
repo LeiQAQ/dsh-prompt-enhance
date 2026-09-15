@@ -158,6 +158,44 @@ Stop-Process -Name "DSH Desktop" -Force
 
 ---
 
+## Codex Desktop 输入框按钮（实验性）
+
+仓库现在包含一个独立的 Codex Desktop UI Adapter。它不修改 Codex 安装目录或 `app.asar`，而是连接到用户明确开启的 Chromium DevTools Protocol 端口，在输入框底部工具栏的权限控件与推理/模型控件之间挂载 `✦` 按钮。
+
+按钮严格执行以下流程：
+
+```text
+点击“提示词增强”
+  → 读取当前输入框内容
+  → 调用 DeepSeek/本地 OpenAI-compatible 增强服务
+  → 增强结果回填到输入框
+```
+
+### 启动方式（Windows）
+
+1. 保存当前 Codex 草稿并退出 Codex。必须退出旧实例，否则单实例机制可能不会开启调试端口。
+2. 使用调试端口启动 Codex：
+
+```powershell
+$codex = (Get-AppxPackage -Name OpenAI.Codex).InstallLocation + '\app\ChatGPT.exe'
+Start-Process -FilePath $codex -ArgumentList '--remote-debugging-port=9222','--remote-allow-origins=*'
+```
+
+3. 在仓库根目录配置增强服务。DeepSeek 和本地服务都使用 OpenAI-compatible `chat/completions` 端点；本地服务可以不设置 API Key：
+
+```powershell
+$env:PROMPT_ENHANCE_ENDPOINT = 'https://your-provider.example/v1/chat/completions'
+$env:PROMPT_ENHANCE_MODEL = 'your-model'
+$env:PROMPT_ENHANCE_API_KEY = 'your-key'
+npm run adapter:codex:win
+```
+
+Windows 启动脚本会从当前用户环境重新读取 provider 配置；仓库不保存 API Key。也可以直接运行 `npm run adapter:codex`，但当前终端必须已经有这三个环境变量。
+
+适配器成功连接后会输出 `button: true`。输入框内容发生变化、任务切换、请求取消、超时或服务失败时，旧结果不会回填。当前适配器依赖 Codex Desktop 的 `.ProseMirror` 输入框和 `data-composer-navigation-target` 挂载标记；Codex 更新后如果探测失败会退出，不执行不确定的 DOM 操作。
+
+该能力是非官方运行时适配，不等同于官方插件原生 composer API；官方 Codex Skill 位于 `plugins/codex-prompt-enhance`，可作为没有 UI 适配时的降级入口。
+
 ## 使用示例
 
 **按钮是主入口。** 输入（或粘贴）一段粗糙的草稿，点 ✦，稍等片刻，输入框里就是增强后的提示词。转圈期间再点 ✦ 是真取消；成功后用小按钮一键还原。

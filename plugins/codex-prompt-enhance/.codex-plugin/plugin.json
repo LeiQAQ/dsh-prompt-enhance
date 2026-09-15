@@ -1,0 +1,18 @@
+{
+  "name": "codex-prompt-enhance",
+  "version": "0.1.0",
+  "description": "Enhance a Codex composer draft into a clearer, more specific prompt while preserving the user's intent and language.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Codex Prompt Enhance",
+    "shortDescription": "Rewrite a draft into a stronger prompt.",
+    "longDescription": "Codex Prompt Enhance preserves the original intent and language, adds concrete scope and acceptance criteria when supported by the input, and returns only the enhanced prompt.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Enhance the following prompt while preserving its intent and language. Return only the enhanced prompt."
+  }
+}

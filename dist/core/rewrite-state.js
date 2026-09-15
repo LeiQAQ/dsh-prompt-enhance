@@ -16,7 +16,7 @@
  *      and a cancelled one both end in `idle` with no error, because in both
  *      cases the user's text is the one that must win.
  *
- * @module dsh-prompt-enhance/client/state
+ * @module dsh-prompt-enhance/core/rewrite-state
  */
 
 import { ERROR_CODES } from '../shared/codes.js'

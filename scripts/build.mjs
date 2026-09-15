@@ -99,6 +99,20 @@ async function buildHost() {
   progress('host entry', `${display(DIST_ENTRY)} ${sizeOf(promoted)}`)
 }
 
+/** Copy the platform-neutral core and HTTP provider adapters for standalone use. */
+async function buildStandalone() {
+  for (const dir of ['core', 'providers']) {
+    const sourceDir = join(SRC, dir)
+    const targetDir = join(DIST, dir)
+    await mkdir(targetDir, { recursive: true })
+    for (const name of await readdir(sourceDir)) {
+      if (!name.endsWith('.js')) continue
+      await writeFile(join(targetDir, name), await readFile(join(sourceDir, name), 'utf8'))
+      progress('standalone module', `${display(join(targetDir, name))}`)
+    }
+  }
+}
+
 /** One inlined client module. */
 const modules = new Map()
 
@@ -251,5 +265,6 @@ function indentBlock(block) {
 await rm(DIST, { recursive: true, force: true })
 await mkdir(DIST, { recursive: true })
 await buildHost()
+await buildStandalone()
 await buildClient()
 progress('ok', `${modules.size} client modules inlined`)
