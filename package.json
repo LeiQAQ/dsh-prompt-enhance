@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Enhance-prompt button for the dsh composer: rewrite the draft into a high-quality prompt with one model call.",
+  "description": "Miaobi prompt enhancement for DSH and experimental T3/Codex composer adapters, with draft protection and DeepSeek Flash support.",
   "license": "MIT",
   "sideEffects": false,
   "exports": {
@@ -21,7 +21,12 @@
     "cordis.patch.yml",
     "dist",
     "plugins",
-    "scripts"
+    "scripts",
+    "src",
+    "adapters/t3/*.mjs",
+    "adapters/t3/*.py",
+    "docs",
+    "CHANGELOG.md"
   ],
   "dsh": {
     "client": {
@@ -48,5 +53,8 @@
     "adapter:codex:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-codex-adapter.ps1",
     "test": "node --test \"tests/**/*.test.mjs\"",
     "verify": "node scripts/verify-prompts.mjs && node scripts/build.mjs && node --test \"tests/**/*.test.mjs\" && node scripts/verify-install.mjs && node scripts/verify-profile-roster.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
   }
 }

@@ -5,6 +5,7 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+__pycache__/
 
 /* Local credentials and provider configuration. Never commit these files. */
 .env

@@ -30,11 +30,13 @@ export function createOpenAICompatibleProvider({
   apiKey,
   model,
   systemPrompt = SYSTEM_PROMPT,
+  thinking,
   fetchImpl = globalThis.fetch,
 } = {}) {
   if (typeof endpoint !== 'string' || endpoint.trim().length === 0) throw new TypeError('provider endpoint is required')
   if (typeof model !== 'string' || model.trim().length === 0) throw new TypeError('provider model is required')
   if (typeof fetchImpl !== 'function') throw new TypeError('provider requires fetch')
+  if (thinking !== undefined && !['enabled', 'disabled'].includes(thinking)) throw new TypeError('thinking must be enabled or disabled')
 
   return {
     id,
@@ -55,6 +57,7 @@ export function createOpenAICompatibleProvider({
               { role: 'user', content: text },
             ],
             stream: false,
+            ...(thinking !== undefined ? { thinking: { type: thinking } } : {}),
           }),
           signal,
         })
