@@ -1,8 +1,15 @@
-// Self contained so the installer can ship this to the native T3 renderer.
+import { createComposerGlow } from './composer-glow.mjs'
+
+// Serialize both functions together; provider credentials never enter this source.
+export function createT3InjectionSource(config) {
+  return `(()=>{const createComposerGlow=${createComposerGlow.toString()};return (${mountT3Composer.toString()})(${JSON.stringify(config)});})();`
+}
+
 // T3 0.1.9 uses Tiptap and exposes its editor instance on the editor DOM node.
 export function mountT3Composer({ base, token, fetchImpl = globalThis.fetch }) {
   const KEY = '__miaobiT3'
   window[KEY]?.dispose()
+  const glow = createComposerGlow()
   let editorNode, editor, revision = 0, active, undo, rendering = false, scheduled = false, disposed = false
   let statusMessage = '', failed = false
   const root = document.createElement('span')
@@ -28,7 +35,7 @@ export function mountT3Composer({ base, token, fetchImpl = globalThis.fetch }) {
   const signature = () => JSON.stringify(doc())
   const text = () => editor?.getText({ blockSeparator: '\n' }) ?? ''
   const say = (message, error = false) => { statusMessage = message; failed = error; status.textContent = message; render() }
-  const cancel = () => { if (active) { active.controller.abort(); active = undefined } }
+  const cancel = () => { glow.stop(); if (active) { active.controller.abort(); active = undefined } }
   const changed = () => { revision++; undo = undefined; if (active) cancel(); render() }
   const attach = () => {
     const next = [...document.querySelectorAll('[data-testid="composer-editor"]')].find(node => node.getBoundingClientRect().width > 0 && node.isContentEditable)
@@ -47,7 +54,8 @@ export function mountT3Composer({ base, token, fetchImpl = globalThis.fetch }) {
     rendering = true
     try {
       attach()
-      if (!editor || editor.isDestroyed) { root.remove(); return }
+      if (!editor || editor.isDestroyed) { cancel(); root.remove(); return }
+      if (active && active.route !== identity()) cancel()
       // Mount immediately before the provider/model picker, in its flex row.
       let container = editorNode.parentElement, anchor
       for (let depth = 0; container && depth < 10; depth++, container = container.parentElement) {
@@ -62,6 +70,9 @@ export function mountT3Composer({ base, token, fetchImpl = globalThis.fetch }) {
       }
       if (parent && (root.parentElement !== parent || root.nextElementSibling !== node)) parent.insertBefore(root, node)
       const busy = !!active
+      // The positioned main surface covers text + footer without changing native
+      // positioning of attachment menus. The inner surface supports older layouts.
+      if (busy) glow.start(editorNode.closest('[data-chat-composer-main-surface="true"]') ?? editorNode.closest('[data-chat-composer-surface="true"]'))
       const label = busy ? '妙笔 · 正在增强，点击取消' : failed ? statusMessage : '妙笔 · 提示词增强'
       const glyph = busy ? '◌' : failed ? '!' : '✦'
       if (button.textContent !== glyph) button.textContent = glyph
@@ -96,13 +107,14 @@ export function mountT3Composer({ base, token, fetchImpl = globalThis.fetch }) {
       active = undefined
       write({ type: 'doc', content: result.text.split('\n').map(line => ({ type: 'paragraph', ...(line ? { content: [{ type: 'text', text: line }] } : {}) })) })
       undo = { before: request.before, after: signature(), route: request.route, editor }
+      glow.stop({ fade: true })
       say('增强完成，可恢复原文')
     } catch (error) {
       if (!request.controller.signal.aborted && active === request) {
         const detail = error instanceof TypeError ? '本地增强服务未连接' : error.message
         say(`${detail}；原文没动`, true)
       }
-    } finally { if (active === request) active = undefined; render() }
+    } finally { if (active === request) { active = undefined; glow.stop() }; render() }
   })
   restore.addEventListener('click', () => {
     const previous = undo
@@ -116,8 +128,9 @@ export function mountT3Composer({ base, token, fetchImpl = globalThis.fetch }) {
   observer.observe(document.body, { childList: true, subtree: true })
   const navigate = () => { cancel(); undo = undefined; render() }
   window.addEventListener('hashchange', navigate)
+  window.addEventListener('popstate', navigate)
   render()
-  const dispose = () => { disposed = true; observer.disconnect(); cancel(); editor?.off('update', changed); window.removeEventListener('hashchange', navigate); root.remove() }
-  window[KEY] = { dispose, version: '0.1.0' }
+  const dispose = () => { disposed = true; observer.disconnect(); cancel(); glow.dispose(); editor?.off('update', changed); window.removeEventListener('hashchange', navigate); window.removeEventListener('popstate', navigate); root.remove() }
+  window[KEY] = { dispose, version: '0.2.0' }
   return window[KEY]
 }

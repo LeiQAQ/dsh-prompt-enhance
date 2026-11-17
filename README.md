@@ -8,8 +8,9 @@ Miaobi reads the current draft, asks the configured model to rewrite it, and pla
 
 Originally built for DeepSeek Harness, the project now includes a **native DSH plugin, a local T3 composer adapter, an experimental Codex Desktop adapter, and a Codex skill fallback**. Enhancement logic is separated from platform integration; the package name remains `dsh-prompt-enhance`.
 
-## Latest changes · 2026-11-16
+## Latest changes · 2026-11-17
 
+- **Color flow across the T3 composer:** a moving multicolor rim and subtle wash appear during real enhancement requests. The effect fades after insertion and clears immediately on cancellation, failure, editing or thread changes. Respects reduced-motion preferences.
 - **T3 composer support:** a `✦` button beside the model picker, click-again cancellation, `↶` restore, and protection against late results after edits or thread changes.
 - **DeepSeek Flash with thinking disabled:** the T3 backend calls the official API and explicitly sends `thinking: { "type": "disabled" }`. Short-draft tests completed in about one second on the test machine; this is an observation, not a latency guarantee.
 - **Separate enhancement model:** T3 can use DeepSeek or Codex CLI independently of the chat model.

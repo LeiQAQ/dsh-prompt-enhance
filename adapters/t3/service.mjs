@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path'
 import { homedir } from 'node:os'
 import { createEnhancer } from '../../src/core/enhance.js'
 import { createT3Provider } from './provider.mjs'
-import { mountT3Composer } from './composer.mjs'
+import { createT3InjectionSource } from './composer.mjs'
 
 export async function startService({ token, port = 18766, provider, timeoutMs = 120000 } = {}) {
   if (!token) throw new Error('A local installation token is required')
@@ -24,12 +24,12 @@ export async function startService({ token, port = 18766, provider, timeoutMs = 
       res.writeHead(204).end(); return
     }
     const reply = (code, payload) => { if (!res.destroyed) { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(payload)) } }
-    if (req.method === 'GET' && req.url === '/health') { reply(200, { ok: true, adapter: 'miaobi-t3', version: '0.1.0', provider: provider.id, model: provider.model, thinking: provider.thinking, busy }); return }
+    if (req.method === 'GET' && req.url === '/health') { reply(200, { ok: true, adapter: 'miaobi-t3', version: '0.2.0', provider: provider.id, model: provider.model, thinking: provider.thinking, busy }); return }
     // Client contains no provider credentials. The bootstrap's installation
     // token authenticates draft requests; arbitrary websites fail Origin checks.
     if (req.method === 'GET' && req.url === '/client.js' && allowed) {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
-      res.end(`(${mountT3Composer.toString()})(${JSON.stringify({ base: `http://127.0.0.1:${server.address().port}`, token })});`); return
+      res.end(createT3InjectionSource({ base: `http://127.0.0.1:${server.address().port}`, token })); return
     }
     if (req.method !== 'POST' || req.url !== '/enhance') { reply(404, { ok: false }); return }
     if (!allowed || req.headers['x-miaobi-token'] !== token) { reply(403, { ok: false, error: '请求未授权' }); return }
