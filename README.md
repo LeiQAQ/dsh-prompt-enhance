@@ -2,58 +2,72 @@
 
 # ✦ Miaobi · Prompt Enhance
 
-**Turn a rough draft into a clearer prompt, directly in your AI agent’s composer.**
+**Turn a draft into a clearer prompt, directly in your AI agent’s composer.**
 
-Miaobi reads the current draft, asks the configured model to rewrite it, and places the result back in the composer for you to review and send. It clarifies wording, goals and existing constraints. It does not execute the task, automatically supply missing facts, or send the message for you.
+Miaobi reads the text you are editing, asks the configured model to rewrite it, and returns the result for you to review and send. It helps clarify goals, wording and existing constraints. It does not execute the task, automatically supply missing facts, or send messages.
 
-Originally built for DeepSeek Harness, the project now includes a **native DSH plugin, a local T3 composer adapter, an experimental Codex Desktop adapter, and a Codex skill fallback**. Enhancement logic is separated from platform integration; the package name remains `dsh-prompt-enhance`.
+Originally built for DeepSeek Harness, the project now provides a native DSH plugin, a local T3 composer adapter, an experimental Codex Desktop adapter and a Codex skill. Enhancement logic is separate from platform integration. The project name is Miaobi; the repository and npm package remain `dsh-prompt-enhance`.
 
-## Latest changes · 2026-11-17
+## Who it is for
 
-- **Color flow across the T3 composer:** a moving multicolor rim and subtle wash appear during real enhancement requests. The effect fades after insertion and clears immediately on cancellation, failure, editing or thread changes. Respects reduced-motion preferences.
-- **T3 composer support:** a `✦` button beside the model picker, click-again cancellation, `↶` restore, and protection against late results after edits or thread changes.
-- **DeepSeek Flash with thinking disabled:** the T3 backend calls the official API and explicitly sends `thinking: { "type": "disabled" }`. Short-draft tests completed in about one second on the test machine; this is an observation, not a latency guarantee.
-- **Separate enhancement model:** T3 can use DeepSeek or Codex CLI independently of the chat model.
-- **Local service and installation protection:** loopback-only listening, authenticated requests, cancellation, failure protection, application backups and uninstall. See the [changelog](CHANGELOG.md).
+- **AI coding tool users:** organize goals and existing requirements before submitting development, debugging or editing requests.
+- **People who write prompts regularly:** refine product descriptions, editing instructions and copy briefs while reviewing the result for accuracy.
+- **Integration maintainers:** understand platform support, model configuration, compatibility limits and verification steps.
 
-## Integrations and capabilities
+Miaobi processes the current draft. It does not automatically read the full conversation, repository or attachments for context, and it does not verify facts. Review each rewrite before sending it.
 
-| Entry point | Status | Model selection | Guide |
+## Current status · 2026-11-17
+
+T3 adapter **0.2.0** adds a moving multicolor rim and subtle wash across the composer during real enhancement requests. The effect fades after insertion and clears immediately on cancellation, failure, editing or thread changes. It respects reduced-motion preferences and does not delay results to display the animation.
+
+T3 supports **DeepSeek Flash with thinking disabled**, configured independently of the chat model. New installations still default to GPT-6.1 Sol with low reasoning; selecting Flash requires configuration. See the [changelog](CHANGELOG.md) for details.
+
+## Platform support
+
+| Entry point | Implementation and verification scope | Enhancement model source | Guide |
 |---|---|---|---|
 | DeepSeek Harness / DSH | Native plugin; historically verified on DSH Desktop 2.0.5 | Session route → deployment default | [DSH installation](docs/dsh-installation.md) |
 | T3 Code | Experimental local adapter; verified on macOS, ad-hoc-signed `0.1.9-zh.1` | Separately configured official DeepSeek API or Codex CLI | [T3 setup, models and uninstall](docs/t3-composer.md) |
-| Codex Desktop | Experimental CDP adapter; historically verified on Windows | Configured OpenAI-compatible API | [Codex integration notes](docs/codex-enhance-button-实现总结.md) |
-| Codex skill | Conversation fallback when no UI adapter is available | Model running the skill | [prompt-enhance skill](plugins/codex-prompt-enhance/skills/prompt-enhance/SKILL.md) |
+| Codex Desktop | Experimental CDP adapter; historically verified on Windows | Configured OpenAI-compatible API | [Codex integration](docs/codex-enhance-button-实现总结.md) |
+| Codex skill | Conversation entry point without a composer button | Model running the skill | [Skill guide](plugins/codex-prompt-enhance/skills/prompt-enhance/SKILL.md) |
 
-**Integration methods and capabilities differ.** DSH uses public extension points without changing the host kernel. T3 patches the application’s HTML entry, updates integrity metadata and re-signs the local ad-hoc build. Codex Desktop uses an explicitly enabled CDP endpoint without editing installed files. These desktop adapters are not official platform plugin APIs and do not imply compatibility with every version.
+DSH uses public extension points without changing the host kernel. T3 patches the application’s HTML entry, updates integrity metadata and applies a local ad-hoc signature, with backups and an uninstall path. Codex Desktop requires user-enabled CDP and does not modify installed application files. The desktop adapters are not official platform plugin APIs; verification on the versions above does not imply compatibility with other releases.
 
-## What it does
+## Features and workflow
 
 ```text
-Write a draft → click ✦ → review the rewrite → send it yourself
+Edit a draft → click ✦ → review the rewrite → send it yourself
 ```
 
-DSH and T3 support empty-input rejection, click-again cancellation, unchanged drafts on model or transport failure, stale-result protection after edits or thread changes, and restoring the original after success. A later edit clears that restore option.
+| Feature | DSH | T3 | Codex Desktop | Codex skill |
+|---|---|---|---|---|
+| Read and replace the composer draft | Yes | Yes | Yes | User supplies text; skill returns a rewrite |
+| Click again to cancel; keep draft on failure | Yes | Yes | Yes | Does not modify the native draft |
+| Prevent late results overwriting edits or another thread | Yes | Yes | Yes | No automatic insertion |
+| Restore the original with `↶` after success | Yes | Yes | No dedicated button | Does not modify the native draft |
+| Multicolor flow across the composer during a request | Not provided | Yes | Not provided | No composer effect |
 
-Codex Desktop supports rewriting, cancellation and stale-result protection, but does not yet expose the same dedicated restore button as DSH/T3. The skill fallback returns rewritten text and does not automatically read or modify the native composer.
+DSH/T3 disable enhancement for empty drafts and accept up to 20,000 characters. Editing a rewritten result clears its restore option. T3 rejects rich text containing file, skill or model reference tokens to preserve those references; ordinary external attachments are not sent for enhancement.
 
-Use Miaobi to organize development requests, editing instructions, product-copy briefs and existing constraints. It is not a fact checker and does not automatically inspect the full conversation, repository or attachments to fill missing context. Review the result before sending.
+## Model selection
 
-## Recommended models
+These recommendations primarily concern **T3’s separate enhancement backend** and do not change the main chat model.
 
-| Model / setting | Suggested use | Integration status |
+| Model / setting | Suggested use | Current integration |
 |---|---|---|
-| **DeepSeek Flash, thinking disabled** (`deepseek-flash`) | **First choice for responsive rewriting:** everyday prompt polishing, informal tasks and short drafts | Implemented and tested through the official API in T3; backend reads an existing CC Switch credential |
-| DeepSeek Flash, low thinking | Evaluation candidate when wording or constraints need extra consideration | Benchmarked separately; the current T3 DeepSeek route requires thinking disabled and does not expose low mode |
-| GPT-6 Luna, low | Everyday rewriting while retaining an existing Codex login workflow | Tested through the T3 Codex CLI route |
-| GPT-6.1 Sol, low | An existing configuration, or a candidate to evaluate on more involved drafts | Initial T3 installer default; tested |
-| GPT-6.1 Terra, low | Optional evaluation for an existing Terra workflow | Tested through Codex CLI; no consistent speed advantage observed |
+| **DeepSeek Flash, thinking disabled** (`deepseek-flash`) | Everyday polishing, informal requests and short drafts where responsiveness matters | Recommended configuration; official API route implemented and tested in T3, with read-only access to an existing CC Switch credential |
+| GPT-6 Luna, low | Everyday rewriting through an existing Codex login | Tested through the T3 Codex CLI route |
+| GPT-6.1 Sol, low | Retain the initial configuration or evaluate more involved drafts | T3 installer default; tested |
+| GPT-6.1 Terra, low | Evaluate within an existing Terra workflow | Tested through T3 Codex CLI; no consistent speed advantage observed |
+| DeepSeek Flash, low thinking | Separate evaluation of thinking mode | Benchmarked separately; the current T3 DeepSeek route requires thinking disabled and does not expose low mode |
 
-**Recommendation is not the installer default.** A fresh T3 installation starts with Sol. Follow the [DeepSeek setup guide](docs/t3-composer.md#deepseek-flash) to choose Flash with thinking disabled. DSH follows its host route. The current Codex Desktop launcher does not expose a thinking toggle; advanced model parameters require separate adaptation.
+The Flash backend explicitly sends `thinking: { "type": "disabled" }`. Follow the [T3 configuration guide](docs/t3-composer.md#deepseek-flash); the installer does not automatically select Flash or discover its credential.
 
-The [model-selection notes](docs/model-selection.md) include individual timings, request paths, cache information and limitations. Direct DeepSeek API and Codex CLI results compare complete integration paths, not raw model inference speed.
+DSH follows its host model route. The Codex Desktop launcher currently has no thinking toggle; advanced parameters require separate adaptation. Short Flash drafts completed in about one second in a small local sample, which is neither a latency guarantee nor a quality ranking. See [model selection and benchmarks](docs/model-selection.md) for individual timings, caching and request paths. Direct API and Codex CLI timings compare complete integration paths rather than raw model inference speed.
 
-## Get started
+## Installation entry points
+
+Fetch and build the project:
 
 ```sh
 git clone https://github.com/LeiQAQ/dsh-prompt-enhance.git
@@ -62,26 +76,24 @@ npm ci
 npm run build
 ```
 
-Then follow the guide for your host. Cloning the repository or installing the skill alone does not add buttons to every application.
+Then complete the integration for your host. Cloning the repository or installing the skill does not add buttons to every application.
 
-- **DSH:** [mount into the web / desktop profiles and verify loading](docs/dsh-installation.md).
-- **T3 on macOS:** read the signing and version requirements, run `python3 adapters/t3/install.py`, then configure the enhancement model.
-- **Codex Desktop:** follow the [CDP instructions](docs/codex-enhance-button-实现总结.md), then run `npm run adapter:codex`.
+- **DSH:** follow the [installation guide](docs/dsh-installation.md) to mount the web / desktop profiles and verify loading.
+- **T3 on macOS:** read the [version, signing and dependency requirements](docs/t3-composer.md), then run `python3 adapters/t3/install.py`. The current installer requires Node.js 22+, Python 3, codesign and an available Codex CLI; DeepSeek also requires a valid existing CC Switch configuration. Reload T3 after installation, then configure the desired model.
+- **Codex Desktop:** follow the [CDP guide](docs/codex-enhance-button-实现总结.md) to start the application and `npm run adapter:codex`.
+- **Codex skill:** follow the [skill guide](plugins/codex-prompt-enhance/skills/prompt-enhance/SKILL.md) to install and invoke it.
 
-## Drafts and credentials
+For existing T3 installations, this frontend-effect update only requires updated source, a Miaobi service restart and a T3 reload. It does not require re-signing the application. Commands are in the [T3 guide](docs/t3-composer.md).
 
-Drafts are sent to the configured model provider and consume its API balance or account quota. T3’s DeepSeek route uses HTTPS to the official API. Its API key stays in the backend and is not copied into the renderer, repository or Miaobi configuration. The service does not retain draft or output text logs.
+## Data handling and limitations
 
-DSH’s `b64:` transport is encoding, **not encryption**. `recordInput: false` prevents command logs from recording draft arguments. Full conversation history is not automatically included in enhancement requests.
+- Drafts are sent to the configured model provider and consume its API balance or account quota. Full conversation history is not automatically included.
+- T3’s DeepSeek route uses HTTPS to the official API. The key stays in the backend and is not copied into the renderer, repository or Miaobi configuration. The backend does not retain draft or output text logs; CC Switch is currently the only implemented DeepSeek credential source.
+- DSH’s `b64:` transport is encoding, **not encryption**. `recordInput: false` prevents command logs from recording draft arguments.
+- T3 depends on the current DOM/Tiptap interface and local service. Application updates may require revalidation or reinstallation; moving the source directory requires updating the LaunchAgent path. Some Node 22 versions report a nonfatal experimental `node:sqlite` warning.
+- Historical host verification does not establish compatibility with every current environment. Short-draft timings do not establish complex-task quality or long-term availability.
 
-## Current boundaries
-
-- DSH/T3 accept drafts up to 20,000 characters. T3 rejects rich text with file, skill or model reference tokens to preserve them; external attachments are not sent to the enhancement model.
-- T3 depends on the current DOM/Tiptap interface and local service. Application updates may require revalidation and reinstallation; moving the source directory requires updating the LaunchAgent path.
-- T3’s DeepSeek credential source currently supports CC Switch only. Some Node 22 versions report an experimental `node:sqlite` warning.
-- Host-version verification is documented per adapter. A short-draft benchmark is not a quality evaluation or a long-term availability guarantee.
-
-## Development and documentation
+## Development and verification
 
 There are no runtime npm dependencies. Development tests use Playwright; after `npm ci`, prepare a test browser as described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -92,7 +104,7 @@ npm test
 python3 -m unittest discover -s tests -p 't3_install_test.py' -v
 ```
 
-Local validation on 2026-11-16 passed 235 JavaScript tests and two installer tests. DSH host-loading checks additionally require a mounted profile; passing the cross-platform suite alone does not prove a DSH installation is active.
+Local validation on 2026-11-17 passed 240 JavaScript tests, two installer tests, the build and prompt checks. Real T3 enhancement, insertion and restore were rechecked. DSH host-loading checks separately require a mounted profile; passing the cross-platform suite alone does not prove that DSH is installed successfully.
 
 [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Model selection](docs/model-selection.md) · [T3 adapter](docs/t3-composer.md) · [DSH transport diagnostics](docs/enhance-transport-failure-diagnosis.md) · [Profile-loading diagnostics](docs/profile-not-loading-diagnosis.md)
 
